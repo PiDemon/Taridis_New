@@ -1,7 +1,7 @@
 # Taridis_New
 <p> Adds a functioning Tardis to the game minetest </p>
 	
-<h4>Features:</h4>
+<h3>Features:</h3>
 
 <ul>
 <li>Gallifreyan Lab: Used to create arton crytals (from mese) and compressed space time (from diamond blocks).  It does not require fuel, but is notably bad for your health!</li>
@@ -11,7 +11,5 @@
 <li>Sonic Screwdriver: Can be created from a button on the fuctions consle unit.  It can summon your tardis (for 3 energy), lock your tardis, and let open locked doors</li>
 <li>Tardis Screen: Displays tardis status</li>
 </ul>
+<h3>Recipes For Lab:</h3>
 
-<br>
-
-<p> Note: Credit to VanessaE for vending machine texture.</p>
