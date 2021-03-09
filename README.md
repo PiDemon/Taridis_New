@@ -13,6 +13,7 @@ Adds a functioning Tardis to the game minetest
 - Gaunlet of Rasilion: A powerful weapon.
 - Dalekanium Tools: Better than diamond, made from azbantium, gold, steel, and obsidian.
 - Galifreyan Chests: Very large, very expensive. 
+- chat command (/summon_tardis) can be used to summon your Tarids (if you have the bring privlage).
 
 ### Consle Units:
 
@@ -32,6 +33,7 @@ Adds a functioning Tardis to the game minetest
 - Glass Conversion: Click on glass to turn it into obsidian glass.
 - Obsidian Reversal: Click on obsidian to turn it into lava.
 - Mesecon Hacking: Click on mesecon wires to turn them on/off.
+- Digiline Hacking: Click on digiline wires to send messages through them. (only works if no message currently is being sent to the channel)
 - Scan: Click (and not sneak) on an entity to scan it.
 - Locking: Click on your Tardis to lock/unlock it.
 - Accelerated Growth: Click on dirt to grow grass on it (in a later update growing crops with be supported).
