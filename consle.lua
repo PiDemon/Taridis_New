@@ -163,9 +163,10 @@ local general_functions = function(pos, formname, fields, sender)
 			if not victim then minetest.chat_send_player(name, fields.locate .. " not found") else 
 				local vpos = victim:get_pos()
 				data:set_int(id.."x_dest", vpos.x) 
-				data:set_int(id.."y_dest", vpos.y)
+				data:set_int(id.."y_dest", vpos.y+1)
 				data:set_int(id.."z_dest", vpos.z)
 				minetest.chat_send_player(name, "Player Located")
+				data:set_int(id.."power", data:get_string(id.."power")-2)
 			end
 		end
 	end 
@@ -190,6 +191,7 @@ local general_functions = function(pos, formname, fields, sender)
 				local item_name = item:get_name()
 				if item:get_name() == "" then item_name = "nothing" end
 				minetest.chat_send_player(name, fields.locate .. " is holding " .. item_name .. " and has " .. victim:get_hp()/2 .. " hearts") 
+				data:set_int(id.."power", data:get_string(id.."power")-1)
 			end
 		end
 	end 
@@ -228,6 +230,7 @@ local general_functions = function(pos, formname, fields, sender)
 				if objs[1]:is_player() then
 					objs[1]:set_hp(objs[1]:get_hp()-8)
 					minetest.chat_send_player(name, objs[1]:get_player_name().." was attacked" )
+					data:set_int(id.."power", data:get_string(id.."power")-1)
 				end			
 			end
 		end
@@ -244,7 +247,6 @@ local travel_to_location = function(pos, formname, fields, sender)
 	local go_pos = { x = data:get_int(id.."x_dest"), y = data:get_int(id.."y_dest"), z = data:get_int(id.."z_dest") }
 	local pmeta = sender:get_meta()
 	local name = sender:get_player_name()
-	local timer = minetest.get_node_timer(out_pos)
 	if fields.go then
 		if data:get_int(id.."power") == 0 then minetest.chat_send_player(name, "No Power Left!") else --power?
 			local node = minetest.get_node(go_pos)
@@ -282,6 +284,7 @@ local travel_to_location = function(pos, formname, fields, sender)
 							ometa:set_string("id", id)
 							data:set_string(id.."out_pos", minetest.serialize(out_pos))
 							data:set_int(id.."power", data:get_string(id.."power")-1)
+							local timer = minetest.get_node_timer(out_pos)
 							timer:start(0.2)
 						else minetest.chat_send_player(name, "Your Tardis can not travel outside the world!") end
 					end
@@ -491,7 +494,7 @@ minetest.register_node("tardis_new:consle_go"..set, {
 		on_receive_fields = travel_to_location
 })
 minetest.register_node("tardis_new:consle_c"..set, {
-		description = "Exterior Consle Unit",
+		description = "Exterior Console Unit",
 		tiles = {ctexture, ctexture, side, side, side, side},
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
@@ -506,7 +509,7 @@ minetest.register_node("tardis_new:consle_c"..set, {
 		on_receive_fields = change_look
 })
 minetest.register_node("tardis_new:consle_o"..set, {
-		description = "Waypoint Consle Unit",
+		description = "Waypoint Console Unit",
 		tiles = {otexture, otexture, side, side, side, side},
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
@@ -579,7 +582,7 @@ minetest.register_node("tardis_new:light"..set, {
 		tiles = {ltexture},
 		groups = {oddly_breakable_by_hand = 1}
 })
-if not craftitem == "" then
+if craftitem == "" then return else
 minetest.register_craft({
 		output = "tardis_new:consle_y"..set,
 		recipe = {
@@ -636,8 +639,23 @@ minetest.register_craft({
 			{"tardis_new:consle_s"}
 		}
 })
+minetest.register_craft({
+		output = "tardis_new:light"..set,
+		recipe = {
+			{craftitem},
+			{"tardis_new:light"}
+		}
+})
+minetest.register_craft({
+		output = "tardis_new:rotor"..set,
+		recipe = {
+			{craftitem},
+			{"tardis_new:rotor"}
+		}
+})
 end
 end
 
 register_console_set("", "", "tardis_side_1.png", "y_console_1.png", "x_console_1.png", "z_console_1.png", "f_console_1.png", "s_console_1.png", "w_console_1.png", "c_console_1.png", "o_console_1.png", "rotor_1.png", "alt_rotor_1.png", "tardis_light_1.png")
 register_console_set("_2", "group:wood", "tardis_side_2.png", "y_console_2.png", "x_console_2.png", "z_console_2.png", "f_console_2.png", "s_console_2.png", "w_console_2.png", "c_console_2.png", "o_console_2.png", "rotor_2.png", "alt_rotor_2.png", "tardis_light_2.png")
+register_console_set("_3", "default:silver_sand", "tardis_side_3.png", "y_console_3.png", "x_console_3.png", "z_console_3.png", "f_console_3.png", "s_console_3.png", "w_console_3.png", "c_console_3.png", "o_console_3.png", "rotor_3.png", "alt_rotor_3.png", "tardis_light_3.png")
