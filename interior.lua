@@ -62,6 +62,12 @@ minetest.register_node("tardis_new:in_door", {
 					local timer = minetest.get_node_timer(go_pos)
 					timer:start(0.2)
 				end)
+			else
+				local meta = minetest.get_meta(pos)
+				local id = meta:get_string("id")
+				local go_pos = minetest.deserialize(data:get_string(id.."out_pos"))
+				go_pos.z = go_pos.z-2
+				objs[1]:set_pos(go_pos)
 			end
 		end
 		return true
@@ -83,4 +89,47 @@ minetest.register_node("tardis_new:stone", {
 		tiles = {"default_stone.png"},
 		diggable = false,
 		groups = { not_in_creative_inventory = 1},
+})
+minetest.register_node("tardis_new:expand_1", {
+		description = "Expanding Wall Segment (1)",
+		tiles = {"tardis_expand.png"},
+		diggable = false,
+		groups = { not_in_creative_inventory = 0},
+		on_rightclick = function(pos, node, clicker, itemstack)
+		local pmeta = clicker:get_meta()
+		local id = pmeta:get_string("id")
+		--if data:get_int(id.."power") < 10 then minetest.chat_send_player(name, "You Need 10 Power") else
+			pos.y = pos.y-3
+			pos.x = pos.x-3
+			minetest.place_schematic(pos, minetest.get_modpath("tardis_new") .. "/schems/hallway_1.mts")
+		--end
+		end
+})
+minetest.register_node("tardis_new:expand_2", {
+		description = "Expanding Wall Segment (2)",
+		tiles = {"tardis_expand.png"},
+		diggable = false,
+		groups = {cracky = 3, not_in_creative_inventory = 0},
+})
+minetest.register_node("tardis_new:expand_3", {
+		description = "Expanding Wall Segment (3)",
+		tiles = {"tardis_expand.png"},
+		diggable = false,
+		groups = { not_in_creative_inventory = 0},
+		on_rightclick = function(pos, node, clicker, itemstack)
+		local pmeta = clicker:get_meta()
+		local id = pmeta:get_string("id")
+		--if data:get_int(id.."power") < 10 then minetest.chat_send_player(name, "You Need 10 Power") else
+			pos.y = pos.y-3
+			pos.x = pos.x-3
+			pos.z = pos.z-14
+			minetest.place_schematic(pos, minetest.get_modpath("tardis_new") .. "/schems/hallway_3.mts")
+		--end
+		end
+})
+minetest.register_node("tardis_new:expand_4", {
+		description = "Expanding Wall Segment (4)",
+		tiles = {"tardis_expand.png"},
+		diggable = false,
+		groups = { not_in_creative_inventory = 0},
 })

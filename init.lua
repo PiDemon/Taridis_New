@@ -98,6 +98,12 @@ minetest.register_tool("tardis_new:sword_dalek", {
 	groups = {sword = 1}
 })
 --sonic
+local function get_formspec_digilines()
+    return "size[10,10]"..
+		"field[1,1;8,1;sonic_message;Message;]"..
+		"field[1,3;8,1;sonic_channel;Channel;]"..
+		"button_exit[1,6;3,3;sonic_send;Send]"
+end
 minetest.register_tool("tardis_new:sonic", {
 	description = "Sonic Screwdriver",
 	inventory_image = "sonic.png",
@@ -112,6 +118,7 @@ minetest.register_tool("tardis_new:sonic", {
 		local node = minetest.get_node(pointed_thing.under)
 		local meta = minetest.get_meta(pointed_thing.under)
 		local select_pos = pointed_thing.under
+		local drop = minetest.get_node_drops(node, nil)
 		if controls.sneak then 
 			if pmeta:get_string("in") == "no" then 
 				if data:get_int(id.."power") < 3 then minetest.chat_send_player(id, "Not Enough Power In Tardis!") else
@@ -181,6 +188,12 @@ minetest.register_tool("tardis_new:sonic", {
 					mesecon.turnon(select_pos, {0, 0, 0})
 				end
 			end
+			--this was seriously the only way I could find to identify a digiline.
+			if drop[1] == "digilines:wire_std_00000000" then
+				local meta = player:get_meta()
+				meta:set_string("sonic_digiline", minetest.serialize(select_pos))
+				minetest.show_formspec(player:get_player_name(), "tardis_new:digilines_formspec", get_formspec_digilines() )
+			end
 		end
 	end
 	if pointed_thing.type == "object" then
@@ -232,13 +245,6 @@ minetest.register_tool("tardis_new:vortex", {
 		itemstack:set_wear(itemstack:get_wear() + 3000) return itemstack
 	end
 })
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if fields.teleport then
-		local pos = minetest.string_to_pos(fields.teleport_x..","..fields.teleport_y..","..fields.teleport_z)
-		player:set_pos(pos)
-		player:set_hp(player:get_hp()-12)
-	end
-end)
 --screen
 local function get_formspec_screen(power, posx, posy, posz, desx, desy, desz, block, id)
 	local power = "Tardis Energy Banks: " .. power
@@ -397,6 +403,18 @@ minetest.register_chatcommand("summon_tardis", {
 	end
 	end
 })
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if fields.teleport then
+		local pos = minetest.string_to_pos(fields.teleport_x..","..fields.teleport_y..","..fields.teleport_z)
+		player:set_pos(pos)
+		player:set_hp(2)
+	end
+	if fields.sonic_send then
+		local meta = player:get_meta()
+		local pos = minetest.deserialize(meta:get_string("sonic_digiline"))
+		digilines.receptor_send(pos, digilines.rules.default, fields.sonic_channel, fields.sonic_message)
+	end
+end)
 minetest.register_on_dieplayer(function(player)
 	local pmeta = player:get_meta()
 	pmeta:set_string("in", "no") 

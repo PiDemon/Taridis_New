@@ -46,6 +46,12 @@ local tardis_timer = function(pos)
 			objs[1]:set_pos(go_pos)
 			pmeta:set_string("in", "yes")
 			pmeta:set_string("id", id)
+		else
+			local meta = minetest.get_meta(pos)
+			local id = meta:get_string("id")
+			local go_pos = minetest.deserialize(data:get_string(id.."in_pos"))
+			go_pos.z = go_pos.z-2
+			objs[1]:set_pos(go_pos)
 		end
 	end
 	return true
