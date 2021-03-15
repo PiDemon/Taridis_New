@@ -383,13 +383,14 @@ minetest.register_node("tardis_new:consle_y"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
-				local meta = minetest.get_meta(pos) --gets meta
-				local id = pmeta:get_string("id") --gets an id, tagged to player when they enter tardis thats the name of the player who made the tardis
-				local out_pos = minetest.deserialize(data:get_string(id.."out_pos")) --using id gets tardis exterior location
-				meta:set_string("id", id) --sets and id for consle
-				meta:set_string("formspec", get_formspec_y(0, out_pos.y)) --sets menu
-			else minetest.dig_node(pos) end --destroys consle if not  in tardis
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
+				local meta = minetest.get_meta(pos) 
+				local out_pos = minetest.deserialize(data:get_string(id.."out_pos")) 
+				meta:set_string("id", id) 
+				meta:set_string("formspec", get_formspec_y(0, out_pos.y)) 
+			else minetest.dig_node(pos) end
 		end,
 		on_rightclick = function(pos, node, clicker, itemstack) 
 			local meta = minetest.get_meta(pos)
@@ -405,9 +406,10 @@ minetest.register_node("tardis_new:consle_x"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then 
 				local meta = minetest.get_meta(pos)
-				local id = pmeta:get_string("id")
 				local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
 				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_x(0, out_pos.x))
@@ -427,9 +429,10 @@ minetest.register_node("tardis_new:consle_z"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
-				local id = pmeta:get_string("id")
 				local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
 				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_z(0, out_pos.z))
@@ -449,9 +452,10 @@ minetest.register_node("tardis_new:consle_f"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
-				local id = pmeta:get_string("id")
 				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_f(1))
 			else minetest.dig_node(pos) end
@@ -469,10 +473,11 @@ minetest.register_node("tardis_new:consle_s"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				local id = pmeta:get_string("id")
-				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_s())
 			else minetest.dig_node(pos) end
 		end,
@@ -484,9 +489,10 @@ minetest.register_node("tardis_new:consle_go"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
-				local id = pmeta:get_string("id")
 				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_w())
 			else minetest.dig_node(pos) end
@@ -499,9 +505,10 @@ minetest.register_node("tardis_new:consle_c"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
-				local id = pmeta:get_string("id")
 				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_c("tardis_new:tardis_old"))
 			else minetest.dig_node(pos) end
@@ -514,9 +521,10 @@ minetest.register_node("tardis_new:consle_o"..set, {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
-				local id = pmeta:get_string("id")
 				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_o())
 			else minetest.dig_node(pos) end
@@ -535,7 +543,8 @@ minetest.register_node("tardis_new:rotor"..set, {
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
-			if pmeta:get_string("in") == "yes" then 
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_r(data:get_int(id.."power")))
@@ -548,8 +557,6 @@ minetest.register_node("tardis_new:rotor"..set, {
 		on_rightclick = function(pos, node, clicker, itemstack)
 			local meta = minetest.get_meta(pos)
 			local id = meta:get_string("id")
-			--local timer = minetest.get_node_timer(pos)
-			--timer:start(15)
 			meta:set_string("formspec", get_formspec_r(data:get_int(id.."power")))
 		end,
 		on_timer = function(pos)

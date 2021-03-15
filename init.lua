@@ -13,7 +13,7 @@ minetest.register_craftitem("tardis_new:arton", {
 minetest.register_node("tardis_new:spacetime", {
 		description = "Compressed Spacetime",
 		tiles = {"tardis_spacetime.png"},
-		groups = {cracky = 1},
+		groups = {cracky = 1}
 })
 minetest.register_craftitem("tardis_new:board", {
 		description = "Tardis Circuitry",
@@ -120,7 +120,8 @@ minetest.register_tool("tardis_new:sonic", {
 		local select_pos = pointed_thing.under
 		local drop = minetest.get_node_drops(node, nil)
 		if controls.sneak then 
-			if pmeta:get_string("in") == "no" then 
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if r_pos.x+50 > select_pos.x and r_pos.x-50 < select_pos.x and r_pos.z+50 > select_pos.z and r_pos.z-50 < select_pos.z and r_pos.y+50 > select_pos.y and r_pos.y-50 < select_pos.y then minetest.chat_send_player(id, "Your Tardis can not be summoned here!") else
 				if data:get_int(id.."power") < 3 then minetest.chat_send_player(id, "Not Enough Power In Tardis!") else
 					local select_pos = pointed_thing.above
 					local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
@@ -188,7 +189,6 @@ minetest.register_tool("tardis_new:sonic", {
 					mesecon.turnon(select_pos, {0, 0, 0})
 				end
 			end
-			--this was seriously the only way I could find to identify a digiline.
 			if drop[1] == "digilines:wire_std_00000000" then
 				local meta = player:get_meta()
 				meta:set_string("sonic_digiline", minetest.serialize(select_pos))
@@ -223,8 +223,8 @@ minetest.register_tool("tardis_new:gaunlet", {
 	on_use = function(itemstack, player, pointed_thing)
 		if pointed_thing.type == "object" then
 			local obj = pointed_thing.ref
-			obj:punch(player, nil, {full_punch_interval = 0.1, damage_groups = {fleshy=300}}, nil)
-			itemstack:set_wear(itemstack:get_wear() + 4000) return itemstack
+			obj:punch(player, nil, {full_punch_interval = 0.1, damage_groups = {fleshy=500}}, nil)
+			itemstack:set_wear(itemstack:get_wear() + 4500) return itemstack
 		end
 	end
 })
@@ -378,7 +378,7 @@ minetest.register_node("tardis_new:chest", {
 			if clicker:get_player_name() == meta:get_string("owner") then meta:set_string("formspec", get_formspec_chest(pos)) else meta:set_string("formspec", "") end
 		end
 })
---extra
+--command
 minetest.register_chatcommand("summon_tardis", {
 	params = "",
 	description = "Summons your Tardis to your location",
@@ -390,9 +390,9 @@ minetest.register_chatcommand("summon_tardis", {
 		local out_pos = minetest.deserialize(data:get_string(name.."out_pos"))
 		local look = data:get_string(name.."look")
 		minetest.set_node(out_pos, {name = "air"})
-		out_pos.x = select_pos.x
-		out_pos.y = select_pos.y
-		out_pos.z = select_pos.z		
+		out_pos.x = math.ceil(select_pos.x)
+		out_pos.y = math.ceil(select_pos.y)
+		out_pos.z = math.ceil(select_pos.z)	
 		minetest.set_node(out_pos, {name=look})
 		local ometa = minetest.get_meta(out_pos)
 		ometa:set_string("id", name)
@@ -415,11 +415,25 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		digilines.receptor_send(pos, digilines.rules.default, fields.sonic_channel, fields.sonic_message)
 	end
 end)
+--fix death stuff
 minetest.register_on_dieplayer(function(player)
 	local pmeta = player:get_meta()
-	pmeta:set_string("in", "no") 
-	pmeta:set_string("vortex", "no") 
+	local id = pmeta:get_string("id")
+	local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+	local rmeta = minetest.get_meta(r_pos)
+	local style = rmeta:get_string("style")
+	pmeta:set_string("vortex", "no")
+	minetest.swap_node(r_pos, {name = "tardis_new:rotor"..style })
 end)
+--fix timers
+minetest.register_lbm({
+	name = "tardis_new:fix_timers",
+	nodenames = {"tardis_new:in_door"},
+	action = function(pos, node)
+		local timer = minetest.get_node_timer(pos)
+		timer:start(0.2)
+	end
+})
 -----------
 --Recipes--
 -----------

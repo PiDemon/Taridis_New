@@ -44,7 +44,6 @@ local tardis_timer = function(pos)
 			objs[1]:set_look_horizontal( math.rad( 180 ))
 			objs[1]:set_look_vertical( math.rad( 0 ))
 			objs[1]:set_pos(go_pos)
-			pmeta:set_string("in", "yes")
 			pmeta:set_string("id", id)
 		else
 			local meta = minetest.get_meta(pos)
