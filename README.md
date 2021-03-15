@@ -51,7 +51,7 @@ Adds a functioning Tardis to the game minetest
 
 ### Bugs
 
-- Currently, after you die, you are assumed to respawn outside of your Tardis. Setting your respawn point inside of your Tardis is not suggested.
+- Some mobs die when they enter the Tardis.
 - Chests sometimes have to be double clicked to open.
 
 License can be found in LICENSE.txt
