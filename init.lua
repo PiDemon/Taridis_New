@@ -420,10 +420,12 @@ minetest.register_on_dieplayer(function(player)
 	local pmeta = player:get_meta()
 	local id = pmeta:get_string("id")
 	local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
-	local rmeta = minetest.get_meta(r_pos)
-	local style = rmeta:get_string("style")
 	pmeta:set_string("vortex", "no")
-	minetest.swap_node(r_pos, {name = "tardis_new:rotor"..style })
+	if r_pos then 
+		local rmeta = minetest.get_meta(r_pos) 
+		local style = rmeta:get_string("style") 
+		minetest.swap_node(r_pos, {name = "tardis_new:rotor"..style }) 
+	end
 end)
 --fix timers
 minetest.register_lbm({
