@@ -274,9 +274,11 @@ minetest.register_node("tardis_new:screen", {
 		groups = {cracky = 3},
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local pmeta = placer:get_meta()
-			if pmeta:get_string("in") == "yes" then 
+			local id = pmeta:get_string("id")
+			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
+			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
-				local id = pmeta:get_string("id")
 				local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
 				meta:set_string("id", id)
 		
@@ -635,3 +637,9 @@ minetest.register_craft({
 			{"default:steel_ingot"}
 		}
 })
+--aliases
+minetest.register_alias("tardis:wall", "tardis_new:wall")
+minetest.register_alias("tardis:in_door", "tardis_new:in_door")
+minetest.register_alias("tardis:light", "tardis_new:light")
+minetest.register_alias("tardis:expand", "tardis_new:wall")
+minetest.register_alias("tardis:stone", "tardis_new:stone")

@@ -62,7 +62,7 @@ local function get_formspec_s()
 		"image_button[1,1;2,2;switch_1.png;pick; ;false;false;switch_2.png]"..
 		"image_button[2.5,1;2,2;switch_1.png;heal; ;false;false;switch_2.png]"..
 		"image_button[4,1;2,2;switch_1.png;axe; ;false;false;switch_2.png]"..
-		"image_button[1,3;2,2;switch_1.png;shovel; ;false;false;switch_2.png]"..
+		"image_button[1,3;2,2;switch_1.png;antigrav; ;false;false;switch_2.png]"..
 		"image_button[2.5,3;2,2;switch_1.png;food; ;false;false;switch_2.png]"..
 		"image_button[4,3;2,2;switch_1.png;attack; ;false;false;switch_2.png]"..
 		"image_button[6,1;4,4;handel_1.png;sonic; ;false;false;handel_2.png]"..
@@ -74,7 +74,7 @@ local function get_formspec_s()
 		"tooltip[scan;Scan Named Player]"..
 		"tooltip[submit;Locate Named Player]"..
 		"tooltip[food;Create a Biscut]"..
-		"tooltip[shovel;Create a Shovel]"..
+		"tooltip[antigrav;Toggle Antigrav]"..
 		"tooltip[attack;Activate Weapons]"..
 		"tooltip[pick;Create a Pickaxe]"
 end
@@ -209,11 +209,13 @@ local general_functions = function(pos, formname, fields, sender)
 			data:set_int(id.."power", data:get_string(id.."power")-5)
 		end
 	end 
-	if fields.shovel then
-		if data:get_int(id.."power") < 5 then minetest.chat_send_player(name, "You Need 5 Power") else
-			pos.y = pos.y+1
-			minetest.add_item(pos, "default:shovel_diamond")
-			data:set_int(id.."power", data:get_string(id.."power")-5)
+	if fields.antigrav then
+		if data:get_string(id.."grav") == "yes" then
+			data:set_string(id.."grav", "no")
+			minetest.chat_send_player(name, "Antigravs Disabled")
+		else
+			data:set_string(id.."grav", "yes")
+			minetest.chat_send_player(name, "Antigravs Enabled")
 		end
 	end 
 	if fields.food then
@@ -225,10 +227,10 @@ local general_functions = function(pos, formname, fields, sender)
 	end 
 	if fields.attack then
 		if data:get_int(id.."power") < 1 then minetest.chat_send_player(name, "You Need 1 Power") else
-			local objs = minetest.get_objects_inside_radius(out_pos, 10)
+			local objs = minetest.get_objects_inside_radius(out_pos, 20)
 			if objs[1] == nil then minetest.chat_send_player(name, "No players in range of Tardis") else
-				if objs[1]:is_player() then
-					objs[1]:set_hp(objs[1]:get_hp()-8)
+				if objs[1]:get_player_name() ~= "" then
+					objs[1]:set_hp(1)
 					minetest.chat_send_player(name, objs[1]:get_player_name().." was attacked" )
 					data:set_int(id.."power", data:get_string(id.."power")-1)
 				end			
@@ -249,47 +251,56 @@ local travel_to_location = function(pos, formname, fields, sender)
 	local name = sender:get_player_name()
 	if fields.go then
 		if data:get_int(id.."power") == 0 then minetest.chat_send_player(name, "No Power Left!") else --power?
-			local node = minetest.get_node(go_pos)
-			if node.name == "ignore" then minetest.get_voxel_manip():read_from_map(out_pos, out_pos) local node = minetest.get_node(out_pos) end
-			if node.name == "ignore" or node.name == "air" then --are you trying to land on a block?
-				if minetest.is_protected(go_pos, name) then minetest.chat_send_player(name, "You don't have access to this area!") else --protected?
-					if r_pos.x+100 > go_pos.x and r_pos.x-100 < go_pos.x and r_pos.z+100 > go_pos.z and r_pos.z-100 < go_pos.z and r_pos.y+100 > go_pos.y and r_pos.y-100 < go_pos.y then minetest.chat_send_player(name, "Your Tardis does not want to land at this location") else --stay away from consle room!
-						if 30900 > go_pos.x and -30900 < go_pos.x and 30900 > go_pos.z and -30900 < go_pos.z and 30900 > go_pos.z and -30900 < go_pos.z then --world limits
-							minetest.swap_node(r_pos, {name = "tardis_new:rotor_active"..style })
-							pmeta:set_string("vortex", "yes")
-							local effect = minetest.sound_play("tardis_sound", {pos = pos, max_hear_distance = 10})
-							
-							minetest.after(8, function(effect)
-								minetest.sound_stop(effect)
-								minetest.swap_node(r_pos, {name = "tardis_new:rotor"..style })
-								--local ometa = minetest.get_meta(r_pos)
-								--ometa:set_string("id", id)
-								--ometa:set_string("formspec", get_formspec_r(data:get_int(id.."power")))
-								local otimer = minetest.get_node_timer(r_pos)
-								otimer:start(15)
-								pmeta:set_string("vortex", "no")
-							end, effect)
-					
-							minetest.set_node(out_pos, {name = "air"})
-							out_pos.x = data:get_int(id.."x_dest")
-							out_pos.y = data:get_int(id.."y_dest")
-							out_pos.z = data:get_int(id.."z_dest")
-							minetest.set_node(out_pos, {name=look})
-							
-							out_pos.y = out_pos.y+1
-							minetest.set_node(out_pos, {name = "air"})
-							out_pos.y = out_pos.y-1
-							
-							local ometa = minetest.get_meta(out_pos)
-							ometa:set_string("id", id)
-							data:set_string(id.."out_pos", minetest.serialize(out_pos))
-							data:set_int(id.."power", data:get_string(id.."power")-1)
-							local timer = minetest.get_node_timer(out_pos)
-							timer:start(0.2)
-						else minetest.chat_send_player(name, "Your Tardis can not travel outside the world!") end
+			if minetest.get_node(go_pos).name == "air" then
+				if data:get_string(id.."grav") == "no" then
+					local vpos = go_pos
+					vpos.y = vpos.y-1
+					while minetest.get_node(vpos).name == "air" and  minetest.get_node(go_pos).name ~= "ignore" do
+						vpos.y = vpos.y-1
 					end
+					go_pos.y = vpos.y+1
 				end
-			else minetest.chat_send_player(name, "Location Obstructed") end
+			else 
+				while minetest.get_node(go_pos).name ~= "air" and minetest.get_node(go_pos).name ~= "ignore" do
+					go_pos.y = go_pos.y+1
+				end
+			end
+			if minetest.is_protected(go_pos, name) then minetest.chat_send_player(name, "You don't have access to this area!") else --protected?
+				if r_pos.x+100 > go_pos.x and r_pos.x-100 < go_pos.x and r_pos.z+100 > go_pos.z and r_pos.z-100 < go_pos.z and r_pos.y+100 > go_pos.y and r_pos.y-100 < go_pos.y then minetest.chat_send_player(name, "Your Tardis does not want to land at this location") else --stay away from consle room!
+					if 30900 > go_pos.x and -30900 < go_pos.x and 30900 > go_pos.z and -30900 < go_pos.z and 30900 > go_pos.z and -30900 < go_pos.z then --world limits
+						minetest.swap_node(r_pos, {name = "tardis_new:rotor_active"..style })
+						pmeta:set_string("vortex", "yes")
+						local effect = minetest.sound_play("tardis_sound", {pos = pos, max_hear_distance = 10})
+						
+						minetest.after(8, function(effect)
+							minetest.sound_stop(effect)
+							minetest.swap_node(r_pos, {name = "tardis_new:rotor"..style })
+							--local ometa = minetest.get_meta(r_pos)
+							--ometa:set_string("id", id)
+							--ometa:set_string("formspec", get_formspec_r(data:get_int(id.."power")))
+							local otimer = minetest.get_node_timer(r_pos)
+							otimer:start(15)
+							pmeta:set_string("vortex", "no")
+						end, effect)
+				
+						minetest.set_node(out_pos, {name = "air"})
+						out_pos = go_pos
+						minetest.set_node(out_pos, {name=look})
+						
+						out_pos.y = out_pos.y+1
+						minetest.set_node(out_pos, {name = "air"})
+						out_pos.y = out_pos.y-1
+						
+						local ometa = minetest.get_meta(out_pos)
+						ometa:set_string("id", id)
+						data:set_string(id.."out_pos", minetest.serialize(out_pos))
+						data:set_int(id.."power", data:get_string(id.."power")-1)
+						local timer = minetest.get_node_timer(out_pos)
+						timer:start(0.2)
+						
+					else minetest.chat_send_player(name, "Your Tardis can not travel outside the world!") end
+				end
+			end
 		end
 	end
 end
@@ -385,6 +396,7 @@ minetest.register_node("tardis_new:consle_y"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos) 
 				local out_pos = minetest.deserialize(data:get_string(id.."out_pos")) 
@@ -396,6 +408,7 @@ minetest.register_node("tardis_new:consle_y"..set, {
 			local meta = minetest.get_meta(pos)
 			local id = meta:get_string("id")
 			local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
+			meta:set_string("id", id)
 			meta:set_string("formspec", get_formspec_y(data:get_int(id.."y_dest"), out_pos.y))
 		end,
 		on_receive_fields = general_functions
@@ -408,6 +421,7 @@ minetest.register_node("tardis_new:consle_x"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then 
 				local meta = minetest.get_meta(pos)
 				local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
@@ -419,6 +433,7 @@ minetest.register_node("tardis_new:consle_x"..set, {
 			local meta = minetest.get_meta(pos)
 			local id = meta:get_string("id")
 			local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
+			meta:set_string("id", id)
 			meta:set_string("formspec", get_formspec_x(data:get_int(id.."x_dest"), out_pos.x))
 		end,
 		on_receive_fields = general_functions
@@ -431,6 +446,7 @@ minetest.register_node("tardis_new:consle_z"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
@@ -442,6 +458,7 @@ minetest.register_node("tardis_new:consle_z"..set, {
 			local meta = minetest.get_meta(pos)
 			local id = meta:get_string("id")
 			local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
+			meta:set_string("id", id)
 			meta:set_string("formspec", get_formspec_z(data:get_int(id.."z_dest"), out_pos.z))
 		end,
 		on_receive_fields = general_functions
@@ -454,6 +471,7 @@ minetest.register_node("tardis_new:consle_f"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				meta:set_string("id", id)
@@ -463,6 +481,7 @@ minetest.register_node("tardis_new:consle_f"..set, {
 		on_rightclick = function(pos, node, clicker, itemstack)
 			local meta = minetest.get_meta(pos)
 			local id = meta:get_string("id")
+			meta:set_string("id", id)
 			meta:set_string("formspec", get_formspec_f(data:get_int(id.."factor")))
 		end,
 		on_receive_fields = general_functions
@@ -475,9 +494,11 @@ minetest.register_node("tardis_new:consle_s"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				local id = pmeta:get_string("id")
+				meta:set_string("id", id)
 				meta:set_string("formspec", get_formspec_s())
 			else minetest.dig_node(pos) end
 		end,
@@ -491,6 +512,7 @@ minetest.register_node("tardis_new:consle_go"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				meta:set_string("id", id)
@@ -507,6 +529,7 @@ minetest.register_node("tardis_new:consle_c"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				meta:set_string("id", id)
@@ -523,6 +546,7 @@ minetest.register_node("tardis_new:consle_o"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				meta:set_string("id", id)
@@ -544,6 +568,7 @@ minetest.register_node("tardis_new:rotor"..set, {
 			local pmeta = placer:get_meta()
 			local id = pmeta:get_string("id")
 			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
+			if not r_pos then r_pos = placer:get_pos() end
 			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
 				local meta = minetest.get_meta(pos)
 				meta:set_string("id", id)
