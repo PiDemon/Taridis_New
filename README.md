@@ -1,4 +1,4 @@
-[![ContentDB](https://content.minetest.net/packages/cool_beans/tardis_new/shields/title/)](https://content.minetest.net/packages/cool_beans/tardis_new/)
+[![ContentDB](https://content.minetest.net/packages/cool_beans/tardis_new/shields/downloads/)](https://content.minetest.net/packages/cool_beans/tardis_new/)
 # Taridis_New
 Adds a functioning Tardis to the game minetest
 	
