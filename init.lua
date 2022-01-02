@@ -1,645 +1,525 @@
---Data (11) : in_pos, out_pos, y_dest, x_dest, z_dest, factor, look, r_pos, waypoint1, waypoint2, waypoint3
-data = minetest.get_mod_storage()
-
-dofile(minetest.get_modpath("tardis_new") .. "/exterior.lua")
-dofile(minetest.get_modpath("tardis_new") .. "/interior.lua")
-dofile(minetest.get_modpath("tardis_new") .. "/consle.lua")
-
-minetest.register_craftitem("tardis_new:arton", {
-		description = "Arton Crystal",
-		inventory_image = "arton.png",
-		groups = {}
-})
-minetest.register_node("tardis_new:spacetime", {
-		description = "Compressed Spacetime",
-		tiles = {"tardis_spacetime.png"},
-		groups = {cracky = 1}
-})
-minetest.register_craftitem("tardis_new:board", {
-		description = "Tardis Circuitry",
-		inventory_image = "tardis_board.png",
-		groups = {}
-})
-minetest.register_craftitem("tardis_new:biscut", {
-		description = "Biscut",
-		inventory_image = "tardis_biscut.png",
-		on_use = minetest.item_eat(8)
-})
-minetest.register_craftitem("tardis_new:shard", {
-		description = "Azbantium Shard",
-		inventory_image = "tardis_shard.png",
-})
-minetest.register_craftitem("tardis_new:bar", {
-		description = "Dalekanium Ingot",
-		inventory_image = "tardis_bar.png",
-})
-minetest.register_node("tardis_new:azbantium", {
-		description = "Azbantium",
-		light_source = 4,
-		tiles = {"tardis_azbantium.png"},
-		groups = {azbantium = 1},
-})
---dalek tools
-minetest.register_tool("tardis_new:pick_dalek", {
-	description = "Dalekanium Pickaxe",
-	inventory_image = "tardis_pick.png",
-	tool_capabilities = {
-		full_punch_interval = 0.5,
-		max_drop_level=3,
-		groupcaps={
-			cracky = {times={[1]=1.0, [2]=0.5, [3]=0.25}, uses=60, maxlevel=3},
-			azbantium = {times={[1]=25}, uses=30, maxlevel=3},
-		},
-		damage_groups = {fleshy=5},
-	},
-	sound = {breaks = "default_tool_breaks"},
-	groups = {pickaxe = 1}
-})
-minetest.register_tool("tardis_new:shovel_dalek", {
-	description = "Dalekanium Shovel",
-	inventory_image = "tardis_shovel.png",
-	tool_capabilities = {
-		full_punch_interval = 0.5,
-		max_drop_level=1,
-		groupcaps={
-			crumbly = {times={[1]=0.9, [2]=0.25, [3]=0.15}, uses=60, maxlevel=3},
-		},
-		damage_groups = {fleshy=4},
-	},
-	sound = {breaks = "default_tool_breaks"},
-	groups = {shovel = 1}
-})
-minetest.register_tool("tardis_new:axe_dalek", {
-	description = "Dalekanium Axe",
-	inventory_image = "tardis_axe.png",
-	tool_capabilities = {
-		full_punch_interval = 0.45,
-		max_drop_level=1,
-		groupcaps={
-			choppy={times={[1]=2.10, [2]=0.90, [3]=0.50}, uses=30, maxlevel=3},
-		},
-		damage_groups = {fleshy=7},
-	},
-	sound = {breaks = "default_tool_breaks"},
-	groups = {axe = 1}
-})
-minetest.register_tool("tardis_new:sword_dalek", {
-	description = "Dalekanium Sword",
-	inventory_image = "tardis_sword.png",
-	tool_capabilities = {
-		full_punch_interval = 0.5,
-		max_drop_level=1,
-		groupcaps={
-			snappy={times={[1]=1, [2]=0.90, [3]=0.30}, uses=65, maxlevel=3},
-		},
-		damage_groups = {fleshy=10},
-	},
-	sound = {breaks = "default_tool_breaks"},
-	groups = {sword = 1}
-})
---sonic
-local function get_formspec_digilines()
-    return "size[10,10]"..
-		"field[1,1;8,1;sonic_message;Message;]"..
-		"field[1,3;8,1;sonic_channel;Channel;]"..
-		"button_exit[1,6;3,3;sonic_send;Send]"
-end
-minetest.register_tool("tardis_new:sonic", {
-	description = "Sonic Screwdriver",
-	inventory_image = "sonic.png",
-	stack_max=1,
-	on_use = function(itemstack, player, pointed_thing)
-	local pmeta = player:get_meta()
-	local id = player:get_player_name()
-	local imeta = itemstack:get_meta()
-	imeta:set_string("interact", "no")
-	if pointed_thing.type == "node" then
-		local controls = player:get_player_control()
-		local node = minetest.get_node(pointed_thing.under)
-		local meta = minetest.get_meta(pointed_thing.under)
-		local select_pos = pointed_thing.under
-		local drop = minetest.get_node_drops(node, nil)
-		if controls.sneak then 
-			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
-			if r_pos.x+50 > select_pos.x and r_pos.x-50 < select_pos.x and r_pos.z+50 > select_pos.z and r_pos.z-50 < select_pos.z and r_pos.y+50 > select_pos.y and r_pos.y-50 < select_pos.y then minetest.chat_send_player(id, "Your Tardis can not be summoned here!") else
-				if data:get_int(id.."power") < 3 then minetest.chat_send_player(id, "Not Enough Power In Tardis!") else
-					local select_pos = pointed_thing.above
-					local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
-					local look = data:get_string(id.."look")
-					minetest.set_node(out_pos, {name = "air"})
-					out_pos.x = select_pos.x
-					out_pos.y = select_pos.y
-					out_pos.z = select_pos.z
-						
-					out_pos.y = out_pos.y+1
-					minetest.set_node(out_pos, {name = "air"})
-					out_pos.y = out_pos.y-1
-					
-					minetest.set_node(out_pos, {name=look})
-					local ometa = minetest.get_meta(out_pos)
-					ometa:set_string("id", id)
-					data:set_string(id.."out_pos", minetest.serialize(out_pos))
-					data:set_int(id.."power", data:get_string(id.."power")-3)
-					local timer = minetest.get_node_timer(out_pos)
-					timer:start(0.5)
-					minetest.chat_send_player(id, "Tardis Summoned")
-				end
-			end
-		else
-			if id == meta:get_string("id") then
-				if minetest.get_item_group(node.name, "tardis") == 1 then
-					local look = data:get_string(id.."look")
-					minetest.set_node(select_pos, {name = look.."_locked"})
-					local ometa = minetest.get_meta(select_pos)
-					ometa:set_string("id", id)
-					minetest.chat_send_player(id, "Tardis Locked")
-				end
-				if minetest.get_item_group(node.name, "tardis_locked") == 1 then
-					local look = data:get_string(id.."look")
-					minetest.set_node(select_pos, {name = look})
-					local timer = minetest.get_node_timer(select_pos)
-					timer:start(0.2)
-					local ometa = minetest.get_meta(select_pos)
-					ometa:set_string("id", id)
-					minetest.chat_send_player(id, "Tardis Unlocked")
-				end
-			end
-			if node.name == "doors:door_steel_a" or node.name == "doors:door_steel_c" then
-				doors.door_toggle(select_pos, nil, nil)
-			end
-			if node.name == "doors:trapdoor_steel" or node.name == "doors:trapdoor_steel_open" then
-				doors.trapdoor_toggle(select_pos, nil, nil)
-			end
-			if node.name == "default:glass" then
-				minetest.set_node(select_pos, {name = "default:obsidian_glass"})
-			end
-			if node.name == "default:dirt" then
-				minetest.set_node(select_pos, {name = "default:dirt_with_grass"})
-			end
-			if node.name == "default:sand" then
-				minetest.set_node(select_pos, {name = "default:silver_sand"})
-			end
-			if node.name == "default:obsidian" then
-				minetest.set_node(select_pos, {name = "default:lava_source"} )
-			end
-			if minetest.get_item_group(node.name, "mesecon_conductor_craftable") == 1 then
-				if mesecon.is_conductor_on(node) then
-					mesecon.turnoff(select_pos, {0, 0, 0})
-				else
-					mesecon.turnon(select_pos, {0, 0, 0})
-				end
-			end
-			if drop[1] == "digilines:wire_std_00000000" then
-				local meta = player:get_meta()
-				meta:set_string("sonic_digiline", minetest.serialize(select_pos))
-				minetest.show_formspec(player:get_player_name(), "tardis_new:digilines_formspec", get_formspec_digilines() )
-			end
+local modpath = minetest.get_modpath("aether")
+dofile(modpath .. "/pots.lua")
+dofile(modpath .. "/pots2.lua")
+dofile(modpath .. "/crafting.lua")
+dofile(modpath .. "/aether.lua")
+--get all craftable items 
+craftable_items = {}
+craftable_number = 0
+minetest.register_on_mods_loaded(function()
+	for item, def in pairs(minetest.registered_items) do
+		if minetest.get_craft_recipe(item).items ~= nil then
+		    craftable_items[item] = def
+			craftable_number = craftable_number+1
 		end
 	end
-	if pointed_thing.type == "object" then
-		local controls = player:get_player_control()
-		local obj = pointed_thing.ref
-		if controls.sneak then 
-			local vpos = obj:get_pos()
-			local pos = player:get_pos()
-			if obj:is_player() then 
-			obj:add_player_velocity({ x = 5*(vpos.x - pos.x), y = 5*(vpos.y - pos.y), z = 5*(vpos.z - pos.z)})
-			else
-			obj:add_velocity({ x = 5*(vpos.x - pos.x), y = 5*(vpos.y - pos.y), z = 5*(vpos.z - pos.z)})
-			end
-		else 
-			minetest.chat_send_player(id, "Scanned subject had " .. obj:get_hp()/2 .. " hearts")
+end)
+--functions
+local function get_formspec_aether_list(metap)
+	craftable_item_string = ""
+	aether_cycle_number = 0
+	finished = ""
+	for item, def in pairs(craftable_items) do
+		if metap:get_string(item) == "" then
+			craftable_item_string = craftable_item_string.."label[0.5,"..aether_cycle_number..";"..def.description.."]"
+			aether_cycle_number = aether_cycle_number+1
 		end
-	end
-	minetest.sound_play("sonic_sound", { max_hear_distance = 10})
-	itemstack:set_wear(itemstack:get_wear() + 500) return itemstack
+	end		
+    return "size[12,12]"..
+		"label[0.5,0.5;Items needed:]"..
+		"list[context;product;7.8,2.8;1,1;1]"..
+		"animated_image[7,2;3,3;core_image;aether_reactor.png;10;500;1]"..
+		"label[7.6,5;"..craftable_number-aether_cycle_number.." out of "..craftable_number.."]"..
+		"scrollbar[0.1,1.5;0.5,10;vertical;scrolly;100]"..
+		"scroll_container[0.5,2;8,12;scrolly;vertical]"..
+		craftable_item_string..
+		"scroll_container_end[]"..
+		"list[current_player;main;4,8;8,4;]"
 end
-})
---gaunlet
-minetest.register_tool("tardis_new:gaunlet", {
-	description = "Gaunlet of Rasilion",
-	inventory_image = "tardis_glove.png",
-	stack_max=1,
-	on_use = function(itemstack, player, pointed_thing)
-		if pointed_thing.type == "object" then
-			local obj = pointed_thing.ref
-			obj:punch(player, nil, {full_punch_interval = 0.1, damage_groups = {fleshy=500}}, nil)
-			itemstack:set_wear(itemstack:get_wear() + 4500) return itemstack
+local function finished_check(metap)
+	aether_cycle_number = 0
+	for item, def in pairs(craftable_items) do
+		if metap:get_string(item) == "" then
+			aether_cycle_number = aether_cycle_number+1
 		end
+	end		
+	if aether_cycle_number == 0 then 
+		return "true"
+	else
+		return "false" 
 	end
-})
---vortex manipulator
-local function get_formspec_vortex()
-    return "size[10,10]"..
-		"field[1,1;8,1;teleport_x;X-Cord;0]"..
-		"field[1,3;8,1;teleport_y;Y-Cord;0]"..
-		"field[1,5;8,1;teleport_z;Z-Cord;0]"..
-		"image_button_exit[1,6.5;3,3;dial_1.png;teleport; ;false;false;dial_2.png]"
 end
-minetest.register_tool("tardis_new:vortex", {
-	description = "Vortex Manipulator",
-	inventory_image = "tardis_vortex.png",
-	stack_max=1,
-	on_use = function(itemstack, player, pointed_thing)
-		minetest.show_formspec(player:get_player_name(), "tardis_new:vortex_formspec", get_formspec_vortex() )
-		itemstack:set_wear(itemstack:get_wear() + 3000) return itemstack
-	end
-})
---screen
-local function get_formspec_screen(power, posx, posy, posz, desx, desy, desz, block, id)
-	local power = "Tardis Energy Banks: " .. power
-	local cur = "Current Position: " .. posx .. ", " .. posy .. ", " .. posz
-	local dest = "Destination: " .. desx .. ", " .. desy .. ", " .. desz
-	local block = block
-	local id = "Tardis Owner: " .. id
-    return "size[10,10]"..
-		"label[1,1;"..minetest.formspec_escape(power).."]"..
-		"label[1,2.5;"..minetest.formspec_escape(cur).."]"..
-		"label[1,4;"..minetest.formspec_escape(dest).."]"..
-		"label[1,5.5;Block Tardis Is On: ]"..
-		"item_image[3,5;2,2;"..minetest.formspec_escape(block).."]"..
-		"label[1,7;"..minetest.formspec_escape(id).."]"
+local function particle(pos)
+			minetest.add_particlespawner({
+				amount = 50,
+				time = 2,
+				minpos = {x=pos.x-1, y=pos.y-1, z=pos.z-1},
+				maxpos = {x=pos.x+1, y=pos.y+1, z=pos.z+1},
+				minvel = {x=-0.5, y=-0.5, z=-0.5},
+				maxvel = {x=0.5, y=0.5, z=0.5},
+				minexptime=3,
+				maxexptime=5,
+				minsize=1,
+				maxsize=6,
+				glow = 10,
+				texture = "aether_particle.png",
+			})
 end
-minetest.register_node("tardis_new:screen", {
-		description = "Tardis Moniter",
-		tiles = {"tardis_side_1.png", "tardis_side_1.png", "tardis_side_1.png", "tardis_side_1.png", "tardis_screen.png", "tardis_side_1.png"},
+--items
+minetest.register_craftitem("aether:diamond", {
+		description = "Purified Diamond",
+		inventory_image = "aether_diamond.png",
+})
+minetest.register_craftitem("aether:diamond_fire", {
+		description = "Fire Infused Diamond",
+		inventory_image = "aether_diamond.png^[colorize:#d50000:70",
+})
+minetest.register_craftitem("aether:diamond_earth", {
+		description = "Earth Infused Diamond",
+		inventory_image = "aether_diamond.png^[colorize:#ffeb3b:70",
+})
+minetest.register_craftitem("aether:diamond_air", {
+		description = "Air Infused Diamond",
+		inventory_image = "aether_diamond.png^[colorize:#4caf4f:70",
+})
+minetest.register_craftitem("aether:diamond_water", {
+		description = "Water Infused Diamond",
+		inventory_image = "aether_diamond.png^[colorize:#2195f3:70",
+})
+minetest.register_craftitem("aether:mese", {
+		description = "Purified Mese",
+		inventory_image = "aether_mese.png",
+})
+minetest.register_craftitem("aether:essence", {
+		description = "Essence of Aether",
+		inventory_image = "aether_essence.png",
+})
+--reactor
+minetest.register_node("aether:reactor_active", {
+		description = "Aether Reactor Core (active)",
+		paramtype = "light",
+		sunlight_propagates = true,
+		light_source = 5,
+		tiles = {"aether_top.png", 
+				"aether_top.png",
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 2}},
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 2}},
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 2}},
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 2}},
+		},
 		drawtype = "nodebox",
 		node_box = {
 			type = "fixed",
 			fixed = {
-				{ -0.5, -0.4, 0.1, 0.5,  0.4, 0 },
-				{ 0.1, 0.1, 0, -0.1, -0.1, -0.5},
+				{5/16, 0.5, 5/16, 0.5, -0.5, 0.5},
+				{-5/16, 0.5, 5/16, -0.5, -0.5, 0.5},
+				{-5/16, 0.5, -5/16, -0.5, -0.5, -0.5},
+				{5/16, 0.5, -5/16, 0.5, -0.5, -0.5},
+				{-0.5, 0.5, -0.5, 0.5, 5/16, 0.5},
+				{-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
+				{2/16, 2/16, 2/16, -2/16, -2/16, -2/16},
 			},
 		},
-		groups = {cracky = 3},
-		after_place_node = function(pos, placer, itemstack, pointed_thing)
-			local pmeta = placer:get_meta()
-			local id = pmeta:get_string("id")
-			local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
-			if not r_pos then r_pos = placer:get_pos() end
-			if r_pos.x+50 > pos.x and r_pos.x-50 < pos.x and r_pos.z+50 > pos.z and r_pos.z-50 < pos.z and r_pos.y+50 > pos.y and r_pos.y-50 < pos.y then
-				local meta = minetest.get_meta(pos)
-				local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
-				meta:set_string("id", id)
-		
-				out_pos.y = out_pos.y-1
-				local node = minetest.get_node(out_pos)
-				if node.name == "ignore" then
-					minetest.get_voxel_manip():read_from_map(out_pos, out_pos)
-					local node = minetest.get_node(out_pos)
-				end
-				out_pos.y = out_pos.y+1
-		
-				meta:set_string("formspec", get_formspec_screen(data:get_int(id.."power"), out_pos.x, out_pos.y, out_pos.z, data:get_int(id.."x_dest"), data:get_int(id.."y_dest"), data:get_int(id.."z_dest"), node.name, id ))
-			else minetest.dig_node(pos) end
-		end,
-		on_rightclick = function(pos)
-			local meta = minetest.get_meta(pos)
-			local id = meta:get_string("id")
-			local out_pos = minetest.deserialize(data:get_string(id.."out_pos"))
-		
-			out_pos.y = out_pos.y-1
-			local node = minetest.get_node(out_pos)
-			if node.name == "ignore" then
-				minetest.get_voxel_manip():read_from_map(out_pos, out_pos)
-				local node = minetest.get_node(out_pos)
-			end
-			out_pos.y = out_pos.y+1
-		
-			meta:set_string("formspec", get_formspec_screen(data:get_int(id.."power"), out_pos.x, out_pos.y, out_pos.z, data:get_int(id.."x_dest"), data:get_int(id.."y_dest"), data:get_int(id.."z_dest"), node.name, id ))
-		end
-})
---lab
-local function get_formspec_lab()
-    return "size[10,10]"..
-		"image[4.5,2;1,1;tardis_arrow.png]"..
-		"list[context;fuel;2,2;1,1;1]"..
-		"list[context;dest;7,2;1,1;1]"..
-		"list[current_player;main;1,5;8,4;]"
-end
-local function lab_recipe(item,result,pos, player)
-	local meta = minetest.get_meta(pos)
-	local inv = meta:get_inventory()
-	if inv:contains_item("fuel", item) == true and inv:is_empty("dest") then
-		inv:remove_item("fuel",item)
-		local fuel_s = inv:get_stack("fuel", 2)
-		inv:set_stack("fuel", 2, fuel_s)
-		inv:set_stack("dest", 2, result)
-		player:set_hp(player:get_hp()-4)
-	end
-end
-local function lab_crafting(pos, player)
-	lab_recipe("default:diamondblock","tardis_new:spacetime",pos, player)
-	lab_recipe("default:mese_crystal","tardis_new:arton",pos, player)
-	lab_recipe("default:diamond","tardis_new:shard",pos, player)
-	lab_recipe("default:mese","default:diamond",pos, player)
-	lab_recipe("default:copper_ingot","default:steel_ingot",pos, player)
-	lab_recipe("default:coal_lump","default:tin_lump 2",pos, player)
-	lab_recipe("default:steelblock","default:mese_crystal 3",pos, player)
-	lab_recipe("default:dirt","default:coal_lump",pos, player)
-end
-minetest.register_node("tardis_new:lab", {
-		description = "Gallifreyan Lab",
-		tiles = {"tardis_lab.png"},
-		groups = {cracky = 3},
+		groups = {cracky = 2},
+		drop = "aether:reactor",
 		on_construct = function(pos, node)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
-			inv:set_size("fuel", 2*1)
-			inv:set_size("dest", 2*1)
-			formspec = get_formspec_lab()
-			meta:set_string("formspec", formspec)
+			inv:set_size("product", 2*1)
+			meta:set_string("formspec", get_formspec_aether_list(minetest.get_meta(pos)))
+			--make it a little easier
+			meta:set_string("aether:reactor", "true")
+			meta:set_string("aether:fire_stab", "true")
+			meta:set_string("aether:water_stab", "true")
+			meta:set_string("aether:air_stab", "true")
+			meta:set_string("aether:earth_stab", "true")
+			meta:set_string("aether:essence", "true")
 		end,
 		on_metadata_inventory_put = function(pos, listname, index, stack, player)
-			lab_crafting(pos, player)
-		end,
-		on_metadata_inventory_take = function(pos, listname, index, stack, player)
-			lab_crafting(pos, player)
-		end
-})
---chest
-local function get_formspec_chest()
-    return "size[24,15]"..
-		"list[context;main;0,0.5;24,10;]"..
-		"list[current_player;main;8,10.5;8,4;]"
-end
-minetest.register_node("tardis_new:chest", {
-		description = "Gallifreyan Chest",
-		tiles = {"tardis_chest_top.png", "tardis_chest_top.png", "tardis_chest_side.png", "tardis_chest_side.png", "tardis_chest_side.png", "tardis_chest_side.png"},
-		groups = {cracky = 3},
-		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
-			meta:set_string("owner", placer:get_player_name())
-			meta:set_string("infotext", "Chest owned by " .. placer:get_player_name())
-			meta:set_string("formspec", get_formspec_chest())
-			inv:set_size("main", 24*10)
+			local aether_stack = inv:get_stack("product", 2)
+			meta:set_string(aether_stack:get_name(), "true")
+			inv:set_stack("product", 2, "")
+			meta:set_string("formspec", get_formspec_aether_list(minetest.get_meta(pos)))
 		end,
-		on_rightclick = function(pos, node, clicker, itemstack) 
+		on_rightclick = function(pos, node, clicker, itemstack)
 			local meta = minetest.get_meta(pos)
-			if clicker:get_player_name() == meta:get_string("owner") then meta:set_string("formspec", get_formspec_chest(pos)) else meta:set_string("formspec", "") end
+			if finished_check(minetest.get_meta(pos)) == "true" then
+				pos.x = pos.x-1
+				if minetest.get_node(pos).name ~= "aether:beam" then return end
+				pos.x = pos.x+2
+				if minetest.get_node(pos).name ~= "aether:beam" then return end
+				pos.x = pos.x-1
+				pos.z=pos.z-1
+				if minetest.get_node(pos).name ~= "aether:beam" then return end
+				pos.z=pos.z+2
+				if minetest.get_node(pos).name ~= "aether:beam" then return end
+				pos.z=pos.z-1
+				if itemstack:get_name() == "aether:mese" then 
+					meta:set_string("formspec", "")
+					minetest.add_particlespawner({
+						amount = 400,
+						time = 10,
+						minpos = {x=pos.x-0.5, y=pos.y-0.5, z=pos.z-0.5},
+						maxpos = {x=pos.x+0.5, y=pos.y+30, z=pos.z+0.5},
+						minvel = {x=0, y=1, z=0},
+						maxvel = {x=0, y=3, z=0},
+						minexptime=5,
+						maxexptime=10,
+						minsize=1,
+						maxsize=10,
+						glow = 14,
+						texture = "aether_particle.png",
+					})
+					clicker:set_breath(0)
+					minetest.set_timeofday(1)
+					minetest.after(1, function() minetest.set_timeofday(0.5) end)
+					minetest.after(2, function() minetest.set_timeofday(1) end)
+					minetest.after(3, function() minetest.set_timeofday(0.5) end)
+					minetest.after(4, function() minetest.set_timeofday(1) clicker:set_physics_override({gravity = -0.5}) end)
+					minetest.after(5, function() minetest.set_timeofday(0.5) end)
+					minetest.after(7, function() minetest.set_timeofday(1) end)
+					minetest.after(8, function() minetest.set_timeofday(0.5) end)
+					minetest.after(9, function() minetest.set_timeofday(1) clicker:set_physics_override({gravity = 1}) end)
+					minetest.after(10, function() clicker:set_stars({star_color = "#ff0000", scale = 10}) end)
+					minetest.after(10.5, function() clicker:set_stars({star_color = "#ffff00", scale = 10}) end)
+					minetest.after(11, function() clicker:set_stars({star_color = "#8cff00", scale = 10}) end)
+					minetest.after(11.5, function() clicker:set_stars({star_color = "#ff8400", scale = 10}) end)
+					minetest.after(12, function() clicker:set_stars({star_color = "#ff0000", scale = 10}) end)
+					minetest.after(12.5, function() clicker:set_stars({star_color = "#ffff00", scale = 10}) end)
+					minetest.after(13, function() clicker:set_stars({star_color = "#8cff00", scale = 10}) end)
+					minetest.after(13.5, function() clicker:set_stars({star_color = "#ff8400", scale = 10}) end)
+					minetest.after(14, function() clicker:set_stars({star_color = "#ebebff69", scale = 1}) end)
+					minetest.after(15, function() 
+					minetest.add_particlespawner({
+						amount = 1000,
+						time = 5,
+						minpos = {x=pos.x-5, y=pos.y-5, z=pos.z-5},
+						maxpos = {x=pos.x+5, y=pos.y+5, z=pos.z+5},
+						minvel = {x=-2, y=-2, z=-2},
+						maxvel = {x=2, y=2, z=2},
+						minexptime=5,
+						maxexptime=10,
+						minsize=20,
+						maxsize=50,
+						glow = 14,
+						texture = "aether_particle.png",
+					})
+					end)
+					minetest.after(16, function(pos) 
+						minetest.set_node(pos, {name = "aether:aether"}) 
+						pos.z=pos.z-1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.z=pos.z-1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.z=pos.z-1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.z=pos.z-1
+						minetest.set_node(pos, {name = "default:lava_source"}) 
+						pos.z=pos.z+5
+						minetest.set_node(pos, {name = "air"}) 
+						pos.z=pos.z+1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.z=pos.z+1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.z=pos.z+1
+						minetest.set_node(pos, {name = "default:lava_source"}) 
+						pos.z=pos.z-4
+						pos.x=pos.x-1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.x=pos.x-1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.x=pos.x-1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.x=pos.x-1
+						minetest.set_node(pos, {name = "default:lava_source"}) 
+						pos.x=pos.x+5
+						minetest.set_node(pos, {name = "air"}) 
+						pos.x=pos.x+1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.x=pos.x+1
+						minetest.set_node(pos, {name = "air"}) 
+						pos.x=pos.x+1
+						minetest.set_node(pos, {name = "default:lava_source"}) 
+					end, pos)
+				end
+			end
 		end
 })
---command
-minetest.register_chatcommand("summon_tardis", {
-	params = "",
-	description = "Summons your Tardis to your location",
-	privs = {bring = true},
-	func = function(name)
-    if data:get_string(name.."in_pos") == "" then return false, "tardis not found" else
-		local player = minetest.get_player_by_name(name)
-		local select_pos = player:get_pos()
-		local out_pos = minetest.deserialize(data:get_string(name.."out_pos"))
-		local look = data:get_string(name.."look")
-		minetest.set_node(out_pos, {name = "air"})
-		out_pos.x = math.ceil(select_pos.x)
-		out_pos.y = math.ceil(select_pos.y)
-		out_pos.z = math.ceil(select_pos.z)	
-		minetest.set_node(out_pos, {name=look})
-		local ometa = minetest.get_meta(out_pos)
-		ometa:set_string("id", name)
-		data:set_string(name.."out_pos", minetest.serialize(out_pos))
-		local timer = minetest.get_node_timer(out_pos)
-		timer:start(0.5)
-		minetest.chat_send_player(name, "Tardis Summoned")
-	end
-	end
+minetest.register_node("aether:reactor", {
+		description = "Aether Reactor Core",
+		paramtype = "light",
+		sunlight_propagates = true,
+		tiles = {"aether_top.png", 
+				"aether_top.png",
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 0.5}},
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 0.5}},
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 0.5}},
+				{name = "aether_reactor.png", animation = {type = "vertical_frames", aspect_w = 16, aspect_h = 16, length = 0.5}},
+		},
+		drawtype = "nodebox",
+		node_box = {
+			type = "fixed",
+			fixed = {
+				{5/16, 0.5, 5/16, 0.5, -0.5, 0.5},
+				{-5/16, 0.5, 5/16, -0.5, -0.5, 0.5},
+				{-5/16, 0.5, -5/16, -0.5, -0.5, -0.5},
+				{5/16, 0.5, -5/16, 0.5, -0.5, -0.5},
+				{-0.5, 0.5, -0.5, 0.5, 5/16, 0.5},
+				{-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
+			},
+		},
+		groups = {cracky = 2},
+		on_rightclick = function(pos, node, clicker, itemstack)
+			if itemstack:get_name() == "aether:essence" then 
+				itemstack:take_item()
+				minetest.set_node(pos, {name = "aether:reactor_active"}) 
+				particle(pos)
+			end
+		end
 })
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if fields.teleport then
-		local pos = minetest.string_to_pos(fields.teleport_x..","..fields.teleport_y..","..fields.teleport_z)
-		player:set_pos(pos)
-		player:set_hp(2)
-	end
-	if fields.sonic_send then
-		local meta = player:get_meta()
-		local pos = minetest.deserialize(meta:get_string("sonic_digiline"))
-		digilines.receptor_send(pos, digilines.rules.default, fields.sonic_channel, fields.sonic_message)
-	end
-end)
---fix death stuff
-minetest.register_on_dieplayer(function(player)
-	local pmeta = player:get_meta()
-	local id = pmeta:get_string("id")
-	local r_pos = minetest.deserialize(data:get_string(id.."r_pos"))
-	pmeta:set_string("vortex", "no")
-	if r_pos then 
-		local rmeta = minetest.get_meta(r_pos) 
-		local style = rmeta:get_string("style") 
-		minetest.swap_node(r_pos, {name = "tardis_new:rotor"..style }) 
-	end
-end)
---fix timers
-minetest.register_lbm({
-	name = "tardis_new:fix_timers",
-	nodenames = {"tardis_new:in_door"},
-	action = function(pos, node)
-		local timer = minetest.get_node_timer(pos)
-		timer:start(0.2)
-	end
+--stabilizers
+minetest.register_node("aether:fire_stab", {
+		description = "Aether Reactor Fire Stabilzer",
+		paramtype = "light",
+		sunlight_propagates = true,
+		tiles = {"aether_fire.png", 
+				"aether_top.png",
+				"aether_feed.png",
+				"aether_top.png",
+				"aether_top.png",
+				"aether_top.png",
+		},
+		groups = {cracky = 2},
+		on_rightclick = function(pos, node, clicker, itemstack)
+			pos.x = pos.x+4
+			local node = minetest.get_node(pos)
+			local targetmeta = minetest.get_meta(pos)
+			if node.name == "aether:reactor_active" then 
+				if itemstack:get_name() == "aether:mese" then
+					itemstack:take_item()
+					pos.x = pos.x-1
+					minetest.set_node(pos, {name ="aether:beam"})
+					pos.x = pos.x-1
+					minetest.set_node(pos, {name ="aether:beam"})
+					pos.x = pos.x-1
+					minetest.set_node(pos, {name ="aether:beam"})
+					particle(pos)
+				end
+			end
+		end,
+		on_destruct = function(pos)
+			pos.x = pos.x+1
+			if minetest.get_node(pos).name == "aether:beam" then
+			minetest.set_node(pos, {name = "air"})
+			pos.x = pos.x+1
+			minetest.set_node(pos, {name = "air"})
+			pos.x = pos.x+1
+			minetest.set_node(pos, {name = "air"})
+			end
+		end
 })
------------
---Recipes--
------------
-minetest.register_craft({
-		output = "tardis_new:tardis_old",
-		recipe = {
-			{"default:steelblock", "tardis_new:arton", "default:steelblock"},
-			{"default:steelblock", "tardis_new:spacetime", "default:steelblock"},
-			{"default:steelblock", "tardis_new:board", "default:steelblock"}
-		}
+minetest.register_node("aether:air_stab", {
+		description = "Aether Reactor Air Stabilzer",
+		paramtype = "light",
+		sunlight_propagates = true,
+		tiles = {"aether_air.png", 
+				"aether_top.png",
+				"aether_top.png",
+				"aether_feed.png",
+				"aether_top.png",
+				"aether_top.png",
+		},
+		groups = {cracky = 2},
+		on_rightclick = function(pos, node, clicker, itemstack)
+			pos.x = pos.x-4
+			local node = minetest.get_node(pos)
+			local targetmeta = minetest.get_meta(pos)
+			if node.name == "aether:reactor_active" then 
+				if itemstack:get_name() == "aether:mese" then
+					itemstack:take_item()
+					pos.x = pos.x+1
+					minetest.set_node(pos, {name ="aether:beam"})
+					pos.x = pos.x+1
+					minetest.set_node(pos, {name ="aether:beam"})
+					pos.x = pos.x+1
+					minetest.set_node(pos, {name ="aether:beam"})
+				particle(pos)
+				end
+			end
+		end,
+		on_destruct = function(pos)
+			pos.x = pos.x-1
+			if minetest.get_node(pos).name == "aether:beam" then
+			minetest.set_node(pos, {name = "air"})
+			pos.x = pos.x-1
+			minetest.set_node(pos, {name = "air"})
+			pos.x = pos.x-1
+			minetest.set_node(pos, {name = "air"})
+			end
+		end
 })
-minetest.register_craft({
-		output = "tardis_new:lab",
-		recipe = {
-			{"default:tinblock", "default:mese", "default:steelblock"},
-			{"default:mese", "tardis_new:board", "default:mese"},
-			{"default:steelblock", "default:mese", "default:tinblock"}
-		}
+minetest.register_node("aether:water_stab", {
+		description = "Aether Reactor Water Stabilzer",
+		paramtype = "light",
+		sunlight_propagates = true,
+		tiles = {"aether_water.png", 
+				"aether_top.png",
+				"aether_top.png",
+				"aether_top.png",
+				"aether_feed.png",
+				"aether_top.png",
+		},
+		groups = {cracky = 2},
+		on_rightclick = function(pos, node, clicker, itemstack)
+			pos.z = pos.z+4
+			local node = minetest.get_node(pos)
+			local targetmeta = minetest.get_meta(pos)
+			if node.name == "aether:reactor_active" then 
+				if itemstack:get_name() == "aether:mese" then
+					itemstack:take_item()
+					pos.z = pos.z-1
+					minetest.set_node(pos, {name = "aether:beam"})
+					pos.z = pos.z-1
+					minetest.set_node(pos, {name ="aether:beam"})
+					pos.z = pos.z-1
+					minetest.set_node(pos, {name ="aether:beam"})
+					particle(pos)
+				end
+			end
+		end,
+		on_destruct = function(pos)
+			pos.z = pos.z+1
+			if minetest.get_node(pos).name == "aether:beam" then
+			minetest.set_node(pos, {name = "air"})
+			pos.z = pos.z+1
+			minetest.set_node(pos, {name = "air"})
+			pos.z = pos.z+1
+			minetest.set_node(pos, {name = "air"})
+			end
+		end
 })
-minetest.register_craft({
-		output = "tardis_new:vortex",
-		recipe = {
-			{"default:stick", "tardis_new:board", "default:stick"},
-			{"default:mese_crystal", "tardis_new:arton", "default:mese_crystal"},
-			{"tardis_new:shard", "default:tinblock", "tardis_new:shard"}
-		}
+minetest.register_node("aether:earth_stab", {
+		description = "Aether Reactor Earth Stabilzer",
+		paramtype = "light",
+		sunlight_propagates = true,
+		tiles = {"aether_earth.png", 
+				"aether_top.png",
+				"aether_top.png",
+				"aether_top.png",
+				"aether_top.png",
+				"aether_feed.png",
+		},
+		groups = {cracky = 2},
+		on_rightclick = function(pos, node, clicker, itemstack)
+			pos.z = pos.z-4
+			local node = minetest.get_node(pos)
+			local targetmeta = minetest.get_meta(pos)
+			if node.name == "aether:reactor_active" then 
+				if itemstack:get_name() == "aether:mese" then
+					itemstack:take_item()
+					pos.z = pos.z+1
+					minetest.set_node(pos, {name = "aether:beam"})
+					pos.z = pos.z+1
+					minetest.set_node(pos, {name = "aether:beam"})
+					pos.z = pos.z+1
+					minetest.set_node(pos, {name = "aether:beam"})
+					particle(pos)
+				end
+			end
+		end,
+		on_destruct = function(pos)
+			pos.z = pos.z-1
+			if minetest.get_node(pos).name == "aether:beam" then
+			minetest.set_node(pos, {name = "air"})
+			pos.z = pos.z-1
+			minetest.set_node(pos, {name = "air"})
+			pos.z = pos.z-1
+			minetest.set_node(pos, {name = "air"})
+			end
+		end
 })
-minetest.register_craft({
-		output = "tardis_new:gaunlet",
-		recipe = {
-			{"tardis_new:arton", "tardis_new:bar", "tardis_new:arton"},
-			{"tardis_new:bar", "default:diamondblock", "tardis_new:bar"},
-			{"tardis_new:bar", "", "tardis_new:bar"}
-		}
+minetest.register_node("aether:beam", {
+	description = "Beam",
+	tiles = {{name = "aether_beam.png",animation = {type = "vertical_frames",aspect_w = 16,aspect_h = 16,length = 0.5}}},
+	drawtype = "glasslike",
+	sunlight_propagates = true,
+	walkable = false,
+	digable = false,
+	pointable = false,
+	buildable_to = false,
+	damage_per_second = 2,
+	drop = "",
+	paramtype = "light",
+	post_effect_color = {a=180, r=40, g=40, b=130},
+	light_source = 5,
+	alpha = 200,
+	groups = {not_in_creative_inventory=1}
 })
-minetest.register_craft({
-		output = "tardis_new:chest",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:spacetime", "default:steel_ingot"},
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
-		}
+--elemental fuser
+local function get_formspec_aether_lab()
+    return "size[10,10]"..
+		"image[2.5,3;1,1;sfinv_crafting_arrow.png]"..
+		"image[6.5,3;1,1;sfinv_crafting_arrow.png^[transformR180]"..
+		"image[4.5,1.5;1,1;sfinv_crafting_arrow.png^[transformR270]"..
+		"image[4.5,4.5;1,1;sfinv_crafting_arrow.png^[transformR90]"..
+		"list[context;one;1.5,3;1,1;1]"..
+		"list[context;two;7.5,3;1,1;1]"..
+		"list[context;three;4.5,0.5;1,1;1]"..
+		"list[context;four;4.5,5.5;1,1;1]"..
+		"list[context;product;4.5,3;1,1;1]"..
+		"list[context;mese;0.1,0.1;1,1;1]"..
+		"image[4.5,3;1,1;aether_face.png]"..
+		"image[0.1,0.1;1,1;aether_face2.png]"..
+		"list[current_player;main;1,7;8,3;]"
+end
+local function recipe(one,two,three,four,pos,result)
+		local meta = minetest.get_meta(pos)
+		local inv = meta:get_inventory()
+		if inv:contains_item("product", "aether:diamond") == true and inv:contains_item("mese", "aether:mese") == true and inv:contains_item("one", one) == true and inv:contains_item("two", two) == true and inv:contains_item("three", three) == true and inv:contains_item("four", four) == true then 
+			inv:remove_item("one", one)
+			inv:remove_item("two", two)
+			inv:remove_item("three", three)
+			inv:remove_item("four", four)
+			inv:remove_item("mese", "aether:mese")
+			local sone = inv:get_stack("one", 2)
+			local stwo = inv:get_stack("two", 2)
+			local sthree = inv:get_stack("three", 2)
+			local sfour = inv:get_stack("four", 2)
+			local smese = inv:get_stack("mese", 2)
+			inv:set_stack("product", 2, result)
+			inv:set_stack("one", 2, sone)
+			inv:set_stack("two", 2, stwo)
+			inv:set_stack("three", 2, sthree)
+			inv:set_stack("four", 2, sfour)
+			inv:set_stack("mese", 2, smese)
+			particle(pos)
+		end
+end
+local function work(pos)
+	recipe("default:ice 50","bucket:bucket_water 50","default:coral_skeleton 50","default:snowblock 50",pos,"aether:diamond_water")
+	recipe("default:coalblock 50","bucket:bucket_lava 50","default:flint 50","default:obsidian 50",pos,"aether:diamond_fire")
+	recipe("default:silver_sandstone 50","default:steelblock 50","default:dirt 50","default:bronzeblock 50",pos,"aether:diamond_earth")
+	recipe("default:tree 50","default:goldblock 50","default:papyrus 50","default:cactus 50",pos,"aether:diamond_air")
+end
+minetest.register_node("aether:fuser", {
+		description = "Elemental Fuser",
+		tiles = {"aether_fuser_top.png", "aether_fuser_top.png", "aether_fuser_side.png", "aether_fuser_side.png", "aether_fuser_side.png", "aether_fuser_front.png"},
+		paramtype2 = "facedir",
+		groups = {cracky = 2},
+		on_construct = function(pos, node)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			inv:set_size("one", 2*1)
+			inv:set_size("two", 2*1)
+			inv:set_size("three", 2*1)
+			inv:set_size("four", 2*1)
+			inv:set_size("product", 2*1)
+			inv:set_size("mese", 2*1)
+			meta:set_string("formspec", get_formspec_aether_lab())
+		end,
+		on_metadata_inventory_put = function(pos, listname, index, stack, player)
+			work(pos)
+		end
 })
-minetest.register_craft({
-		output = "tardis_new:board 2",
-		recipe = {
-			{"default:copper_ingot", "default:diamond", "default:tin_ingot"},
-			{"default:mese_crystal", "default:goldblock", "default:steel_ingot"},
-			{"group:wood", "group:wood", "group:wood"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:rotor",
-		recipe = {
-			{"default:steelblock", "default:diamond", "default:steelblock"},
-			{"default:glass", "tardis_new:arton", "default:glass"},
-			{"default:steelblock", "tardis_new:board", "default:steelblock"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_y",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:grass_1", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_x",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:dry_grass_1", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_z",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:junglegrass", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_go",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:silver_sandstone_block", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_c",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:cactus", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_f",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:obsidian_block", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_o",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:bronzeblock", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:consle_s",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "default:permafrost", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:screen",
-		recipe = {
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"},
-			{"default:steel_ingot", "tardis_new:board", "default:steel_ingot"},
-			{"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:light 4",
-		recipe = {
-			{"", "default:steel_ingot", ""},
-			{"default:steel_ingot", "tardis_new:arton", "default:steel_ingot"},
-			{"", "default:steel_ingot", ""}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:azbantium",
-		recipe = {
-			{"tardis_new:shard", "tardis_new:shard"},
-			{"tardis_new:shard", "tardis_new:shard"}
-		}
-})
-minetest.register_craft({
-		type = "shapeless",
-		output = "tardis_new:shard 4",
-		recipe = {"tardis_new:azbantium"}
-})
-minetest.register_craft({
-		output = "tardis_new:pick_dalek",
-		recipe = {
-			{"tardis_new:bar", "tardis_new:bar", "tardis_new:bar"},
-			{"", "default:stick", ""},
-			{"", "default:stick", ""}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:shovel_dalek",
-		recipe = {
-			{"tardis_new:bar"},
-			{"default:stick"},
-			{"default:stick"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:axe_dalek",
-		recipe = {
-			{"tardis_new:bar", "tardis_new:bar", ""},
-			{"tardis_new:bar", "default:stick", ""},
-			{"", "default:stick", ""}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:sword_dalek",
-		recipe = {
-			{"tardis_new:bar"},
-			{"tardis_new:bar"},
-			{"default:stick"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:bar",
-		recipe = {
-			{"default:obsidian", "default:steel_ingot", "default:obsidian"},
-			{"tardis_new:shard", "default:gold_ingot", "tardis_new:shard"},
-			{"default:obsidian", "default:steel_ingot", "default:obsidian"}
-		}
-})
-minetest.register_craft({
-		output = "tardis_new:wall_craftable 9",
-		recipe = {
-			{"default:steel_ingot"},
-			{"tardis_new:arton"},
-			{"default:steel_ingot"}
-		}
-})
---aliases
-minetest.register_alias("tardis:wall", "tardis_new:wall")
-minetest.register_alias("tardis:in_door", "tardis_new:in_door")
-minetest.register_alias("tardis:light", "tardis_new:light")
-minetest.register_alias("tardis:expand", "tardis_new:wall")
-minetest.register_alias("tardis:stone", "tardis_new:stone")
