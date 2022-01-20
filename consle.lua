@@ -608,6 +608,7 @@ minetest.register_node("tardis_new:light"..set, {
 		drawtype = "signlike",
 		paramtype = "light",
 		sunlight_propagates = true,
+		walkable = false, -- Allow players to walk thru them (rather than blocking their movement)
 		light_source = minetest.LIGHT_MAX,
 		paramtype2 = "wallmounted",
 		selection_box = { type = "wallmounted" },
